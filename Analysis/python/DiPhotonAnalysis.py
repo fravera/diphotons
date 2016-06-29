@@ -19,7 +19,7 @@ class DiPhotonAnalysis(object):
                  genIsoDefinition=("genIso",10.),
                  dataTriggers=["HLT_DoublePhoton60*","HLT_DoublePhoton85*","HLT_Photon250_NoHE*"],
                  mcTriggers=["HLT_DoublePhoton60*","HLT_DoublePhoton85*","HLT_Photon250_NoHE*"],
-                 askTriggerOnMc=False,sortTemplate=False,singlePhoDumperTemplate=False,computeRechitFlags=False,removeEEEE=True,
+                 askTriggerOnMc=False,sortTemplate=False,singlePhoDumperTemplate=False,computeRechitFlags=False,removeEEEE=False,
                  applyDiphotonCorrections=False,diphotonCorrectionsVersion="",
                  sourceDiphotons="flashggDiPhotons"):
         
@@ -236,10 +236,10 @@ class DiPhotonAnalysis(object):
                                         cut = cms.string(
                 "mass > %(massCut)f"
                 " && leadingPhoton.pt > %(ptLead)f %(scalingFunc)s && subLeadingPhoton.pt > %(ptSublead)f %(scalingFunc)s"
-                " && abs(leadingPhoton.superCluster.eta)<2.5 && abs(subLeadingPhoton.superCluster.eta)<2.5 "
-                " && ( abs(leadingPhoton.superCluster.eta)<1.4442 || abs(leadingPhoton.superCluster.eta)>1.566)"
-                " && ( abs(subLeadingPhoton.superCluster.eta)<1.4442 || abs(subLeadingPhoton.superCluster.eta)>1.566)" 
-                " && ( abs(leadingPhoton.superCluster.eta) < 1.5 || abs(subLeadingPhoton.superCluster.eta) < 1.5 )"
+                # " && abs(leadingPhoton.superCluster.eta)<2.5 && abs(subLeadingPhoton.superCluster.eta)<2.5 "
+                # " && ( abs(leadingPhoton.superCluster.eta)<1.4442 || abs(leadingPhoton.superCluster.eta)>1.566)"
+                # " && ( abs(subLeadingPhoton.superCluster.eta)<1.4442 || abs(subLeadingPhoton.superCluster.eta)>1.566)" 
+                # " && ( abs(leadingPhoton.superCluster.eta) < 1.5 || abs(subLeadingPhoton.superCluster.eta) < 1.5 )"
                 % { "massCut" : self.massCut, 
                     "ptLead"  : self.ptLead,
                     "ptSublead" : self.ptSublead,
@@ -267,14 +267,15 @@ class DiPhotonAnalysis(object):
         extraCut = ""
         if self.vetoGenDiphotons:
             extraCut = "&& (mass <= %1.5g)" % self.vetoGenDiphotons
+        print "removeEEEE ",self.removeEEEE
         if self.removeEEEE:
             extraCut += "&& (abs(leadingPhoton.eta)    < 1.5    || abs(subLeadingPhoton.eta) < 1.5  )" 
         selectorTemplate = cms.EDFilter("GenDiPhotonSelector",src=cms.InputTag("flashggGenDiPhotons"),
                                         cut=cms.string("mass > %(massCut)f"
-                                                       "&& leadingPhoton.pt > %(ptLead)f %(scalingFunc)s && subLeadingPhoton.pt > %(ptSublead)f %(scalingFunc)s"
-                                                       "&& (abs(leadingPhoton.eta)    < 1.4442 || abs(leadingPhoton.eta)    > 1.566)"
-                                                       "&& (abs(subLeadingPhoton.eta) < 1.4442 || abs(subLeadingPhoton.eta) > 1.566)"
-                                                       "&& (abs(leadingPhoton.eta)    < 2.5    && abs(subLeadingPhoton.eta) < 2.5  )"
+                                                       # "&& leadingPhoton.pt > %(ptLead)f %(scalingFunc)s && subLeadingPhoton.pt > %(ptSublead)f %(scalingFunc)s"
+                                                       # "&& (abs(leadingPhoton.eta)    < 1.4442 || abs(leadingPhoton.eta)    > 1.566)"
+                                                       # "&& (abs(subLeadingPhoton.eta) < 1.4442 || abs(subLeadingPhoton.eta) > 1.566)"
+                                                       # "&& (abs(leadingPhoton.eta)    < 2.5    && abs(subLeadingPhoton.eta) < 2.5  )"
                                                        "%(extraCut)s"
                                                        % { "massCut" : self.massCut, 
                                                            "ptLead"  : self.ptLead,
@@ -535,7 +536,7 @@ class DiPhotonAnalysis(object):
         template = singlePhoSimpleTemplate.clone(src=cms.InputTag("flashggRandomizedPhotons"),
                                         cut = cms.string(
                 " pt > %(ptSublead)f"
-                " && abs(superCluster.eta)<2.5 && ( abs(superCluster.eta)<1.4442 || abs(superCluster.eta)>1.566)"
+                # " && abs(superCluster.eta)<2.5 && ( abs(superCluster.eta)<1.4442 || abs(superCluster.eta)>1.566)"
                 % { "ptSublead" : self.ptSublead,
                     }
                 )
