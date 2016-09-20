@@ -41,23 +41,23 @@ class CombineApp(TemplatesApp):
                         make_option("--observable",dest="observable",action="store",type="string",
                                     ## default="mgg[2650,300,6000]",
                                     ## default="mgg[2650,320,6000]",
-                                    default="mgg[16000,230,10000]",
+                                    default="mgg[2385,230,5000]",
                                     help="Observable used in the fit default : [%default]",
                                     ),
                         make_option("--observables",dest="observables",action="callback",callback=optpars_utils.Load(scratch=True),type="string",
                                     default={ 
                                 ## "EBEE"     : "mggEBEE[15600,330,10000]",
-                                "EBEE"     : "mggEBEE[6800,330,10000]",
-                                "EBEE016"  : "mggEBEE[6800,330,10000]",
-                                "EBEE0T"   : "mggEBEE[6800,330,10000]",
-                                "EEHighR9" : "mggEBEE[6800,330,10000]",
-                                "EEHighR9" : "mggEBEE[6800,330,10000]",
-                                ## "EBEB"     : "mggEBEB[16000,230,10000]",
-                                "EBEB016"  : "mggEBEB[8000,230,10000]",
-                                "EBEB"     : "mggEBEB[8000,230,10000]",
-                                "EBEB0T"   : "mggEBEB[8000,230,10000]",
-                                "EBHighR9" : "mggEBEB[8000,230,10000]",
-                                "EBHighR9" : "mggEBEB[8000,230,10000]",
+                                "EBEE"     : "mggEBEE[2335,330,5000]",
+                                "EBEE016"  : "mggEBEE[2335,330,5000]",
+                                "EBEE0T"   : "mggEBEE[2335,330,5000]",
+                                "EEHighR9" : "mggEBEE[2335,330,5000]",
+                                "EEHighR9" : "mggEBEE[2335,330,5000]",
+                                ## "EBEB"     : "mggEBEB[4770,230,5000]",
+                                "EBEB016"  : "mggEBEB[2385,230,5000]",
+                                "EBEB"     : "mggEBEB[2385,230,5000]",
+                                "EBEB0T"   : "mggEBEB[2385,230,5000]",
+                                "EBHighR9" : "mggEBEB[2385,230,5000]",
+                                "EBHighR9" : "mggEBEB[2385,230,5000]",
                                               },
                                     help="Per category observable ranges : [%default]",
                                     ),
@@ -65,9 +65,11 @@ class CombineApp(TemplatesApp):
                                     default={ 
                                 "eff13TeV_38T" : {
                                     "EBEB" : 0.08,
-                                    "EBEE" : 0.08,
-                                    "EBEB016" : 0.08,
-                                    "EBEE016" : 0.08,
+                                    "EBEE" : 0.08
+                                    },
+                                "eff13TeV_38T_016" : {
+                                    "EBEB016" : 0.06,
+                                    "EBEE016" : 0.06,
                                     },
                                 "eff13TeV_0T" : {
                                     "EBEB0T" : 0.16,
@@ -78,10 +80,12 @@ class CombineApp(TemplatesApp):
                                 "lumi13TeV_38T" : {
                                     "EBEB" : 0.027,
                                     "EBEE" : 0.027,
+                                    "EBEB016" : 0.027,
+                                    "EBEE016" : 0.027,
                                     },
                                 "lumi13TeV_38T_016" : {
-                                    "EBEB016" : 0.1,
-                                    "EBEE016" : 0.1,
+                                    "EBEB016" : 0.053,
+                                    "EBEE016" : 0.053,
                                     },
                                 "lumi13TeV_0T" : {
                                     "EBEB0T" : 0.12,
@@ -125,16 +129,17 @@ class CombineApp(TemplatesApp):
                         make_option("--plot-binning",dest="plot_binning",action="callback",callback=optpars_utils.ScratchAppend(float),
                                     type="string",
                                     ## default=[94,230,2110],
-                                    default=[69,230,1610],
+                                    default=[89,230,2010],
                                     help="Binning to be used for plots",
                                     ),                      
                         make_option("--cat-plot-binning",dest="cat_plot_binning",action="callback",callback=optpars_utils.Load(scratch=True),
                                     type="string",default={ 
-                                                            "EBEE0T": [64,330,1610], 
+                                                            "EBEE0T": [64,330,1610],                                                             
                                                             "EBEE": [64,330,1610], 
-                                                            "EBEE016": [64,330,1610], 
+                                                            "EBEE016": [84,330,2010], 
                                                             "EEHighR9": [64,330,1610], 
                                                             "EELowR9": [64,330,1610], 
+                                                            "EBEB": [69,230,2010],
                                                             },
                                     help="Binning to be used for plots",
                                     ),
@@ -153,8 +158,14 @@ class CombineApp(TemplatesApp):
                         make_option("--plot-fit-bands",dest="plot_fit_bands",action="store_true",default=False,
                                     help="Add error bands to plots",
                                     ),                        
+                        make_option("--no-plot-fit-bands",dest="plot_fit_bands",action="store_false",
+                                    help="Do not add error bands to plots",
+                                    ),                        
                         make_option("--fast-bands",dest="fast_bands",action="store_true",default=True,
                                     help="Use hesse bands computation",
+                                    ),                        
+                        make_option("--read-fit-bands",dest="read_fit_bands",action="store",default=None,type="string",
+                                    help="Read error bands from files",
                                     ),                        
                         make_option("--convert-to-binned",dest="convert_to_binned",action="store_true",default=False,
                                     help="Convert pdf to binnned in plots",
@@ -209,6 +220,10 @@ class CombineApp(TemplatesApp):
                         make_option("--generate-signal-dataset",dest="generate_signal_dataset",action="store_true",default=False,
                                     help="Generate signal dataset",
                                     ),
+                        make_option("--parametric-signal-new",dest="parametric_signal_new",type="string",action="callback",callback=optpars_utils.ScratchAppend(str),
+                                    default=[],
+                                    help="Read parametric signal from new root file.",
+                                    ),
                         make_option("--parametric-signal",dest="parametric_signal",type="string",action="callback",callback=optpars_utils.ScratchAppend(str),
                                     default=[],
                                     help="Read parametric signal from root file.",
@@ -233,7 +248,8 @@ class CombineApp(TemplatesApp):
                                               ## sorted(list(np.concatenate((np.arange(500,2000,100),np.arange(2000,4500,500),np.arange(740,770,2))))),
                                               ## [750.,760.],
                                               ## [500.,750.,1000.,1500.,2000.,2500.,3000.,3500.,4000.,4500.],
-                                              list(np.concatenate((np.arange(500,750,2),np.arange(750,1000,2),np.arange(1000,1600,4),np.arange(1600,4500,100)))),
+                                              [750.,752.,754.,756.,758.,760.,762.,],
+                                              ## list(np.concatenate((np.arange(500,750,2),np.arange(750,1000,2),np.arange(1000,1600,4),np.arange(1600,4500,100)))),
                                               ## list(np.concatenate(np.arange(850,1000,2),np.arange(1000,1600,4),np.arange(1600,3500,100)))),
                                               ## [600.],
                                               ## list(np.arange(700,800,2)),
@@ -275,6 +291,54 @@ class CombineApp(TemplatesApp):
                                               },
                                     help="Details about parametric signal",
                                     ),
+                        make_option("--parametric-signal-source-new",dest="parametric_signal_source_new",action="callback",callback=optpars_utils.Load(scratch=True),
+                                    type="string",
+                                    default={ "ws" : "ws_inputs", 
+                                              "interpolate_below" : 0,
+                                              "reparam_by_cat" : { "EBEB016"    : {"thetaSmearEBEB016"    : "thetaSmearEBEB_13TeV_016" , 
+                                                                                   "deltaSmear"           : "deltaSmearEBEB016"        },
+                                                                   "EBEE016"    : {"thetaSmearEBEE016"    : "thetaSmearEBEE_13TeV_016" , 
+                                                                                   "deltaSmear"           : "deltaSmearEBEE016"        },
+                                                                   "EBEB"       : {"thetaSmearEBEB"       : "thetaSmearEBEB_13TeV_38T" , 
+                                                                                   "deltaSmear"           : "deltaSmearEBEB"           },
+                                                                   "EBEE"       : {"thetaSmearEBEE"       : "thetaSmearEBEE_13TeV_38T" , 
+                                                                                   "deltaSmear"           : "deltaSmearEBEE"           },
+                                                                   "EBEB0T"     : {"thetaSmearEBEB0T"     : "thetaSmearEBEB_13TeV_0T"  , 
+                                                                                   "deltaSmear"           : "deltaSmearEBEB0T"         },
+                                                                   "EBEE0T"     : {"thetaSmearEBEE0T"     : "thetaSmearEBEE_13TeV_0T"  , 
+                                                                                   "deltaSmear"           : "deltaSmearEBEE0T"         },
+                                                                   "EBEB_8TeV"  : {"thetaSmearEBEB_8TeV"  : "thetaSmearEBEB_13TeV_8TeV", 
+                                                                                   "deltaSmear"           : "deltaSmearEBEB_8TeV"      },
+                                                                 },
+                                              "pdfs"    : { "001" : {"EBEB" : "SignalShape_kMpl001_EBEB", 
+                                                                     "EBEE" : "SignalShape_kMpl001_EBEE",
+                                                                     "EBEB016" : "SignalShape_kMpl001_EBEB016", 
+                                                                     "EBEE016" : "SignalShape_kMpl001_EBEE016",
+                                                                     "EBEB0T" : "SignalShape_kMpl001_EBEB0T", 
+                                                                     "EBEE0T" : "SignalShape_kMpl001_EBEE0T",
+                                                                     "EBEB_8TeV" : "SignalShape_kMpl001_EBEB_8TeV", 
+                                                                     },
+                                                            "01" : {"EBEB" : "SignalShape_kMpl01_EBEB", 
+                                                                    "EBEE" : "SignalShape_kMpl01_EBEE",
+                                                                    "EBEB016" : "SignalShape_kMpl01_EBEB016", 
+                                                                    "EBEE016" : "SignalShape_kMpl01_EBEE016",
+                                                                    "EBEB0T" : "SignalShape_kMpl01_EBEB0T", 
+                                                                    "EBEE0T" : "SignalShape_kMpl01_EBEE0T",
+                                                                     "EBEB_8TeV" : "SignalShape_kMpl01_EBEB_8TeV", 
+                                                                    },
+                                                            "02" : {"EBEB" : "SignalShape_kMpl02_EBEB", 
+                                                                    "EBEE" : "SignalShape_kMpl02_EBEE",
+                                                                    "EBEB016" : "SignalShape_kMpl02_EBEB016", 
+                                                                    "EBEE016" : "SignalShape_kMpl02_EBEE016",
+                                                                    "EBEB0T" : "SignalShape_kMpl02_EBEB0T", 
+                                                                    "EBEE0T" : "SignalShape_kMpl02_EBEE0T",
+                                                                    "EBEB_8TeV" : "SignalShape_kMpl02_EBEB_8TeV", 
+                                                                    },
+                                                            },
+
+                                              },
+                                    help="Details about parametric new signal",
+                                    ),
                         make_option("--do-parametric-signal-nuisances",dest="do_parametric_signal_nuisances",action="store_true",default=True,
                                     help="Add energy scale uncertainty",
                                     ),
@@ -283,10 +347,22 @@ class CombineApp(TemplatesApp):
                                     ),
                         make_option("--parametric-signal-nuisances",dest="parametric_signal_nuisances",action="callback",callback=optpars_utils.Load(scratch=True),
                                     type="string",
-                                    default={"energyResolutionEBEB_13TeV_38T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEB","EBEB016"] },
-                                             "energyResolutionEBEE_13TeV_38T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEE","EBEE016"] },
-                                             "energyResolutionEBEB0T_13TeV_38T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEB0T"] },
-                                             "energyResolutionEBEE0T_13TeV_38T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEE0T"] }
+                                    default={"energyResolutionEBEB_13TeV_38T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEB"] },
+                                             "energyResolutionEBEE_13TeV_38T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEE"] },
+                                             "energyResolutionEBEB_13TeV_016" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEB016"] },
+                                             "energyResolutionEBEE_13TeV_016" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEE016"] },
+                                             "energyResolutionEBEB_13TeV_0T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEB0T"] },
+                                             "energyResolutionEBEE_13TeV_0T" : { "up" : "_smearUp", "down" : "_smearDown", "categories" : ["EBEE0T"] }
+                                             }
+                                    ),
+                        make_option("--parametric-signal-nuisances-new",dest="parametric_signal_nuisances_new",action="callback",callback=optpars_utils.Load(scratch=True),
+                                    type="string",
+                                    default={"thetaSmearEBEB_13TeV_38T" : ["EBEB"],
+                                             "thetaSmearEBEE_13TeV_38T" : ["EBEE"],
+                                             "thetaSmearEBEB_13TeV_0T"  : ["EBEB0T"],
+                                             "thetaSmearEBEE_13TeV_0T"  : ["EBEE0T"],
+                                             "thetaSmearEBEB_13TeV_016" : ["EBEB016"],
+                                             "thetaSmearEBEE_13TeV_016" : ["EBEE016"]
                                              }
                                     ),
                         make_option("--parametric-signal-xsection",dest="parametric_signal_xsection",action="callback",callback=optpars_utils.Load(scratch=True),
@@ -352,6 +428,12 @@ class CombineApp(TemplatesApp):
                                     default=None,
                                     help="Name of generated card",
                                     ),
+                        make_option("--store-fwhm-parametrization",dest="store_fwhm_parametrization",action="store_true",default=True,
+                                    help="Store the parametrization of FHMW vs MH",
+                                    ),
+                        make_option("--fhmw-parametrized-formula",dest="fwhm_parametrized_formula",action="store",type="string",default=None,
+                                    help="Analytical expression of the fhwm parametrization",
+                                    ),
                         make_option("--compute-fwhm",dest="compute_fwhm",action="store_true",default=False,
                                     help="Compute the Full Width Half Maximum (FWHM) when generating signals",
                                     ),
@@ -361,6 +443,9 @@ class CombineApp(TemplatesApp):
                                     ),
                         make_option("--generate-ws-bkgnbias",dest="generate_ws_bkgnbias",action="store_true",default=False,
                                     help="Read signal and background workspaces and generate background+bias model",
+                                    ),
+                        make_option("--generate-ws-bkgnbias-new",dest="generate_ws_bkgnbias_new",action="store_true",default=False,
+                                    help="Read signal and background workspaces and generate background+bias model using parametrized fhwm",
                                     ),
                         make_option("--bkgnbias-components",dest="bkgnbias_components",action="callback",default=["bkg","pp"],
                                     type="string",callback=optpars_utils.ScratchAppend(),
@@ -376,16 +461,27 @@ class CombineApp(TemplatesApp):
                                               ### "EEHighR9_dijet_330_10000" : "((0.1*((x/600.)^-5)))/6.",
                                               ### "EELowR9_dijet_330_10000" : "((0.1*((x/600.)^-5)))/6.",
                                               ### 
-                                              ### "EBEB0T_dijet_230_10000" : "((0.06*((x/600.)^-4))+1e-6)/6.",
-                                              ### "EBEE0T_dijet_330_10000" : "((0.1*((x/600.)^-5)))/6.",
-                                              ### 
-                                              ### "EBEB_8TeV_dijet_300_10000" : "((0.06*((x/600.)^-4))+1e-6)/6.",
-                                              
-                                              "EBEB_dijet_230_10000" : "(pow(x,2.2-0.4*log(x)))/10.",
-                                              "EBEE_dijet_330_10000" : "(0.10*(x/600.)^(-5)+2e-5)/10.",
-                                              "EBEB016_dijet_230_10000" : "(pow(x,2.2-0.4*log(x)))/10.",
-                                              "EBEE016_dijet_330_10000" : "(0.10*(x/600.)^(-5)+2e-5)/10.",
-                                              },
+                                "EBEB0T_dijet_230_10000" : "((0.06*((x/600.)^-4))+1e-6)/6.",
+                                "EBEE0T_dijet_330_10000" : "((0.1*((x/600.)^-5)))/6.",
+                                
+                                "EBEB_8TeV_dijet_300_10000" : "((0.06*((x/600.)^-4))+1e-6)/6.",
+                                
+                                "EBEB_dijet_230_10000" : "(pow(x,2.2-0.4*log(x)))/10.",
+                                "EBEE_dijet_330_10000" : "(0.10*(x/600.)^(-5)+2e-5)/10.",
+                                "EBEB016_dijet_230_10000" : "(pow(x,2.2-0.4*log(x)))/10.",
+                                "EBEE016_dijet_330_10000" : "(0.10*(x/600.)^(-5)+2e-5)/10.",
+                                
+                                "EBEB0T_dijet_230_5000" : "((0.06*((x/600.)^-4))+1e-6)/6.",
+                                "EBEE0T_dijet_330_5000" : "((0.1*((x/600.)^-5)))/6.",
+                                
+                                "EBEB_8TeV_dijet_300_5000" : "((0.06*((x/600.)^-4))+1e-6)/6.",
+                                
+                                "EBEB_dijet_230_5000" : "(pow(x,2.2-0.4*log(x)))/10.",
+                                "EBEE_dijet_330_5000" : "(0.10*(x/600.)^(-5)+2e-5)/10.",
+                                "EBEB016_dijet_230_5000" : "(pow(x,2.2-0.4*log(x)))/10.",
+                                "EBEE016_dijet_330_5000" : "(0.10*(x/600.)^(-5)+2e-5)/10.",
+
+                                },
                                     help="Bias as a function of diphoton mass to compute the bias uncertainty values inside the datacard",
                                     ),
                         make_option("--fwhm-input-file",dest="fwhm_input_file",action="callback",callback=optpars_utils.Load(scratch=True),
@@ -466,7 +562,7 @@ class CombineApp(TemplatesApp):
         self.observables_ = {}
         self.morph_ = {}
         self.interpolated_ = {}
-        
+       
         
     def __call__(self,options,args):
         
@@ -476,7 +572,8 @@ class CombineApp(TemplatesApp):
         # ROOT.TGaxis.SetMaxDigits(5)
         from ROOT import RooFit
         from ROOT import TH1D, TCanvas, TAxis
-        
+        ## ROOT.gSystem.Load("RooDCBShape_cc.so")
+        ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
         printLevel = ROOT.RooMsgService.instance().globalKillBelow()
         ROOT.RooMsgService.instance().setGlobalKillBelow(RooFit.FATAL)
         ROOT.TH1D.SetDefaultSumw2(True)
@@ -498,7 +595,6 @@ class CombineApp(TemplatesApp):
                     if (self.options.spin2 and (name.startswith("RSGravToGG") or name.startswith("RSGravitonToGG"))) or (not self.options.spin2 and name.startswith("GluGluSpin0")):
 
                         mass,coup = self.getMassAndCoup(name)
-                        ## print name, mass, coup
                         if not coup in self.signal_scale_factors_:
                             self.signal_scale_factors_[coup] = {}
                             
@@ -514,22 +610,28 @@ class CombineApp(TemplatesApp):
 
         self.setup(options,args)
         self.save_params_.append("luminosity")
+
+        if options.make_pr_plot:
+            self.makePrPlot(options,args)
+
         if options.fit_background:
             self.fitBackground(options,args)
             if options.run_ks_test:
                 self.runKSTest(options,args)
 
         if options.generate_signal_dataset:
-            if len(options.parametric_signal) > 0:
+            if len(options.parametric_signal_new) > 0:
+                self.generateParametricSignalNew(options,args)
+            elif len(options.parametric_signal) > 0:
                 self.generateParametricSignal(options,args)
             else:
                 self.generateSignalDataset(options,args)
 
-            ## if options.fit_background and options.make_pr_plot:
-            ##     self.makePrPlot(options,args)
             
         if options.generate_ws_bkgnbias:
             self.generateWsBkgnbias(options,args)
+        if options.generate_ws_bkgnbias_new:
+            self.generateWsBkgnbiasNew(options,args)
         
         if options.generate_datacard:
             self.generateDatacard(options,args)
@@ -763,37 +865,6 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                         datacard.write(" -".ljust(15) )
                 datacard.write("\n")
 
-
-            ### datacard.write("lumi  lnN".ljust(20))
-            ### for cat in categories:
-            ###     datacard.write(" 1.06".ljust(15) )
-            ###     for comp in options.components:
-            ###         datacard.write(" -".ljust(15) )
-            ### for cat in sidebands:                
-            ###     for comp in  fit["sidebands"][cat]:                    
-            ###         datacard.write(" -".ljust(15) )
-            ### datacard.write("\n")
-            ### 
-            ### datacard.write("eff  lnN".ljust(20))
-            ### for cat in categories:
-            ###     datacard.write(" 1.10".ljust(15) )
-            ###     for comp in options.components:
-            ###         datacard.write(" -".ljust(15) )
-            ### for cat in sidebands:                
-            ###     for comp in  fit["sidebands"][cat]:                    
-            ###         datacard.write(" -".ljust(15) )
-            ### datacard.write("\n")
-            ### 
-            ### datacard.write("PDFs  lnN".ljust(20))
-            ### for cat in categories:
-            ###     datacard.write(" 1.06".ljust(15) )
-            ###     for comp in options.components:
-            ###         datacard.write(" -".ljust(15) )
-            ### for cat in sidebands:                
-            ###     for comp in  fit["sidebands"][cat]:                    
-            ###         datacard.write(" -".ljust(15) )
-            ### datacard.write("\n")
-            
             # shape nuiances 
             shapeNuis = fit.get("shape_unc",{}).get(signame,{})
             for nuis,nuisCats in shapeNuis.iteritems():
@@ -807,7 +878,7 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                 
             # other nuisance parameters
             datacard.write("\n")
-            for param in fit.get("params",[]) + fit.get("sig_params",{}).get(signame,[]):
+            for param in sorted(list(set(fit.get("params",[]) + fit.get("sig_params",{}).get(signame,[])))):
                 if (param[-1] == 0):
                     datacard.write("# ")
                 datacard.write("%s param %1.3g %1.3g\n" % tuple(param) )            
@@ -849,7 +920,8 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
         
         fitname = options.fit_name
         fit = options.fits[fitname]
-        signame = "grav_001_600"
+        signame = "grav_001"
+        self.rooVar("MH").setVal(750.)
 
         fitops = [ RooFit.PrintLevel(-1),RooFit.Warnings(False),RooFit.Minimizer("Minuit2"),RooFit.Offset(True) ]
         if options.verbose:
@@ -862,25 +934,174 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
             for cat in fit["categories"]:
             
                 model = self.rooPdf("model_%s%s" % (comp,cat))
+                print model
+                model_norm = self.rooFunc("model_%s%s_norm" % (comp,cat)).getVal()
                 data      = self.rooData("binned_data_%s"% (cat))                 
+                print data
+                data.Print()
                 model.fitTo(data,RooFit.Strategy(2),*fitops)
                 
-                signal = self.workspace_.pdf("model_signal_%s_%s" % (signame,cat))
-                signal_norm = self.workspace_.function("model_signal_%s_%s_norm" % (signame,cat))
+                signal = self.rooPdf("model_signal_%s_%s" % (signame,cat))
+                signal_norm = 3.6*self.rooFunc("model_signal_%s_%s_norm" % (signame,cat)).getVal()
                 
                 roobs = self.getObservable(cat)
 
-                if options.include_bias_in_bands:
-                    bias_name = "%s_%s_%d_%d" % (cat,model,int(roobs.getMin()),int(roobs.getMax()))
-                else:
-                    bias_name = None
+                bias_name = None
 
                 if options.plot_blind != None and len(options.plot_blind) == 0:
                     options.plot_blind = None
 
                 self.plotBkgFit(options,data,model,roobs,"%s%s" % (comp,cat),poissonErrs=True, plot_binning=options.cat_plot_binning.get(cat,options.plot_binning),
-                                blabel=bias_name, signalmodel=signal, signalmodel_norm=signal_norm, blind=options.plot_blind)
+                                blabel=bias_name, signalmodel=signal, signalmodel_norm=(model_norm,signal_norm), blind=options.plot_blind)
 
+
+    ## ------------------------------------------------------------------------------------------------------------        
+    def generateWsBkgnbiasNew(self,options,args):
+
+        print "--------------------------------------------------------------------------------------------------------------------------"
+        print "including bias term in the background w/ fhmw parametrized vs MH"
+        print "--------------------------------------------------------------------------------------------------------------------------"
+        
+        fit = options.fits[options.fit_name]
+        
+        roowe = self.buildRooVar("weight",[])   
+     
+        if not "params" in fit:
+            fit["params"] = []
+        if not "sig_params" in fit:
+            fit["sig_params"] = {}
+        
+        if options.signal_name:
+            signals = [options.signal_name]
+        else:
+            signals = options.signals.keys()
+            
+        if (len(signals) == 0 or options.fit_name == None):
+            print "Please provide --signal-name and --fit-name"
+            return
+        
+        #if len(signals) > 1:
+        options.background_root_file = options.background_root_file.replace(".root","_bkgnbias_") ## change this for generateDatacard
+        
+
+        bkg = {}
+        for cat in fit["categories"]:
+            for comp in options.components :
+                bkgPdf = self.rooPdf("model_%s_%s" % (comp,cat))
+                ## retrieve norm of pdf 
+                rooNdata = self.buildRooVar("%s_norm" % (bkgPdf.GetName()),[],recycle=True,importToWs=False)
+                
+                bkg[ "%s_%s" % (cat,comp)  ] = (bkgPdf,rooNdata)
+                
+        # make sure we don't loose the bkg workspace
+        self.bookNewWs(True)
+        
+        for signame in signals:            
+            if not signame in fit["sig_params"]:
+                fit["sig_params"][signame] = []
+
+            for cat in fit["categories"]:
+                
+                roobs = self.getObservable(cat)
+                rooset = ROOT.RooArgSet(roobs,roowe)
+                self.keep(rooset)
+
+                dataBinned = self.rooData("binned_data_%s" % cat)
+                data = self.rooData("data_%s" % cat)
+                if options.use_signal_datahist:
+                    signalDataHist = self.rooData("signal_%s_%s" % (signame,cat))
+                    signalPdf = ROOT.RooHistPdf("signal_model_%s_%s"% (signame,cat),"signalPdf_%s_%s"% (signame,cat),ROOT.RooArgSet(roobs),signalDataHist)
+                else:
+                    signalPdf = self.rooPdf("model_signal_%s_%s"% (signame,cat))
+                self.workspace_.rooImport(data)
+                self.workspace_.rooImport(dataBinned)
+                
+                for comp in options.components :
+
+                    (bkgPdf,rooNdata) = bkg[ "%s_%s" % (cat,comp)  ] 
+                    (bkgPdf,rooNdata) = (bkgPdf.Clone(bkgPdf.GetName()),rooNdata.Clone(rooNdata.GetName()))
+                    
+                    rooNdata.Print()
+
+                    roopdflist = ROOT.RooArgList()
+                    roopdflist.add(bkgPdf)
+                    roopdflist.add(signalPdf)
+                    
+                    ## add bias term only to some background components
+                    ##     important in the case of the semi-parametric fit
+                    if not comp in options.bkgnbias_components:
+                        self.workspace_.rooImport(bkgPdf)
+                        self.workspace_.rooImport(rooNdata)
+                        continue
+                
+                    bkgPdf.SetName("bkgOnly_model_%s_%s" % (comp,cat) )
+                    rooNdata.SetName("%s_norm" % bkgPdf.GetName())
+                    ## build list of coefficients 
+                    roolist = ROOT.RooArgList()
+                    
+                    # compute the nuisance values if bias_func and fwhm_input_file are provided 
+                    
+                    if(len(options.bias_func) != 0):
+                        bias_name = "%s_%s_%d_%d" % (cat,options.default_model,int(roobs.getMin()),int(roobs.getMax()))
+                        if (not bias_name in options.bias_func.keys()):
+                            print
+                            print("Cannot compute the bias values: bias function for %s not provided" % bias_name)
+                            print
+                        else:
+                            bias_func = ROOT.TF1(bias_name, options.bias_func[bias_name],roobs.getMin(),roobs.getMax())
+                            bias_expformula = bias_func.GetExpFormula()
+                            bias_expformula.ReplaceAll("x", "@0")
+                            ## self.workspace_.Print()
+                            MH = ROOT.RooRealVar("MH", "MH", 0, 6000)
+                            MH.setConstant()
+                            bias_rooformula =  ROOT.RooFormulaVar("bias_rooformula_%s" %cat,"bias_rooformula_%s" %cat,bias_expformula.Data(),ROOT.RooArgList(MH))
+                            
+                            substr = signame[signame.index("_")+1:]
+                            
+                            fwhm_rooformula = ROOT.RooFormulaVar("fwhm_rooformula_%s" %cat,"fwhm_rooformula_%s" %cat,options.fhwm_parametrized_formula, ROOT.RooArgList(MH))                            # fhwm parametrized vs MH
+                            lumi_rooval = RooFit.RooConst(float(options.luminosity))
+                            nBias = ROOT.RooFormulaVar ("nBias_%s_%s" %(comp,cat), "nBias_%s_%s" %(comp,cat), "@0*@1*@2", ROOT.RooArgList(bias_rooformula,fwhm_rooformula,lumi_rooval ))
+                            thetaBias= self.buildRooVar("thetaBias_%s_%s" % (comp,self.getPdfCoeffLabel(cat)), [], importToWs=False )
+                            thetaBias.setVal(0.)
+                            nBias_theta = ROOT.RooFormulaVar ("nBias_%s_%s_theta" %(comp,cat), "nBias_%s_%s_theta" %(comp,cat), "@0*@1", ROOT.RooArgList(nBias,thetaBias))
+                    
+                    fit["sig_params"][signame].append( ("%s " % thetaBias.GetName(),0, 1.) )
+                  
+                    pdfSum_norm = ROOT.RooFormulaVar("model_%s_%s_norm" % (comp,cat),"model_%s_%s_norm" % (comp,cat),"@0",ROOT.RooArgList(rooNdata)) 
+                
+                    fracsignuis = ROOT.RooFormulaVar("signal_%s_%s_nuisanced_frac" % (comp,cat),"signal_%s_%s_nuisanced_frac" % (comp,cat),"@0*1./@1",ROOT.RooArgList(nBias_theta,pdfSum_norm) )
+                    fracbkg = ROOT.RooFormulaVar("background_%s_%s_frac" % (comp,cat), "background_%s_%s_frac" % (comp,cat), "1.-@0",ROOT.RooArgList(fracsignuis))
+                    roolist.add(fracbkg)
+                    roolist.add(fracsignuis)
+                                        
+                    ## summing pdfs
+                    pdfSum = ROOT.RooAddPdf("model_%s_%s" % (comp,cat),"model_%s_%s" % (comp,cat), roopdflist, roolist)
+                    self.workspace_.rooImport(pdfSum_norm)
+                    self.workspace_.rooImport(pdfSum,RooFit.RecycleConflictNodes())
+                    
+                    shapeNuis = fit.get("shape_unc",{}).get(signame,{})
+                    
+            
+            # import pdfs for the sidebands
+            for cat,comps in fit.get("sidebands",{}).iteritems():
+                for comp in comps:
+                    dataBinned = self.rooData("binned_data_%s" % cat)
+                    data = self.rooData("data_%s" % cat)
+                    self.workspace_.rooImport(data)
+                    self.workspace_.rooImport(dataBinned)
+                    
+                    sbPdf = self.rooPdf("model_%s_%s" % (comp,cat))
+                    sbNorm  = self.rooVar("%s_norm" % sbPdf.GetName())
+                    self.workspace_.rooImport(sbNorm)
+                    self.workspace_.rooImport(sbPdf,RooFit.RecycleConflictNodes())
+                
+            #if len(signals) > 1:
+            options.output_file = "%s%s.root" % (options.background_root_file,signame)
+            print options.output_file
+            self.saveWs(options)
+            self.bookNewWs(False)
+
+    ## ------------------------------------------------------------------------------------------------------------  
 
     ## ------------------------------------------------------------------------------------------------------------        
     def generateWsBkgnbias(self,options,args):
@@ -1110,7 +1331,7 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
         
         observed = self.computeKSD(datacdf,modelcdf,obs)
         
-        tmp = self.open("/tmp/musella/pippo.root","recreate")
+        tmp = self.open("/tmp/%s/cache.root" % getuser(),"recreate")
         
         ksdistrib = []
         ndata = data.sumEntries()
@@ -1515,7 +1736,7 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                     
                 self.plotBkgFit(options,plreduced,pdf,roobs,"%s%s" % (comp,cat),poissonErrs=True, plot_binning=options.cat_plot_binning.get(cat,options.plot_binning),
                                 blabel=bias_name,signalmodel=signal,signalmodel_norm=signal_norm,blind=options.plot_blind)
-                self.plotBkgFit(options,plreduced,pdf,roobs,"%s%s_lin" % (comp,cat),poissonErrs=True, plot_binning=options.cat_plot_binning.get(cat,options.plot_binning),logy=False,blabel=bias_name,signalmodel=signal,signalmodel_norm=signal_norm,blind=options.plot_blind)
+                ## self.plotBkgFit(options,plreduced,pdf,roobs,"%s%s_lin" % (comp,cat),poissonErrs=True, plot_binning=options.cat_plot_binning.get(cat,options.plot_binning),logy=False,blabel=bias_name,signalmodel=signal,signalmodel_norm=signal_norm,blind=options.plot_blind)
                 
                 ## normalization has to be called <pdfname>_norm or combine won't find it
                 if options.norm_as_fractions:
@@ -1806,6 +2027,7 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
             signals = options.signals.keys()
 
         MH = self.buildRooVar("MH",[1000])
+        MH.setConstant()
         deltaM = self.buildRooVar("deltaM",[3200,-600,200])
         roogen = self.buildRooVar("mggGen",[0,13000])
         for signame in signals:
@@ -2138,10 +2360,225 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
         return True    
         
     ## ------------------------------------------------------------------------------------------------------------
+    def generateParametricSignalNew(self,options,args):
+
+        print "--------------------------------------------------------------------------------------------------------------------------"
+        print "Importing parametric signal model"
+        print 
+        
+        from templates_maker import WsList
+        tmp = self.open("/tmp/%s/cache.root" % getuser(),"recreate")
+        ws = ROOT.RooWorkspace("w","w")
+        workspace = WsList(ws)
+        exp = map(lambda x: glob.glob("%s/*.root" % x) if x.endswith("/") else [x], options.parametric_signal_new)
+        ## print
+        print exp
+        ## print
+        for fin in map(self.open, reduce(lambda x,y: x+y, exp )): 
+            fin.Print()
+            workspace.append(fin.Get(str(options.parametric_signal_source_new["ws"])))
+            
+        
+        prefix_output = options.output_file.replace(".root","")
+        options.signal_root_file = options.output_file ## copy this in case we want to run --generate-datacard at the same time
+        if not options.cardname:
+            options.cardname = "datacard_%s.txt" % prefix_output
+        
+        MH   = self.buildRooVar("MH",[1000.],importToWs=True,recycle=False,setConstant=True)
+        kmpl = self.buildRooVar("kmpl",[0.01],importToWs=True,recycle=False,setConstant=True)
+        
+        fit = options.fits[options.fit_name]
+        if not "sig_params" in fit:
+            fit["sig_params"] = {}
+        if not "shape_unc" in fit:
+            fit["shape_unc"] = {}
+            
+        selection = fit["selection"]
+        exAs = {}
+        categories = options.fits[options.fit_name]["categories"]
+        for cat in categories:
+            accparams = map(lambda x: options.parametric_signal_acceptance["acc_%s_p%d" % (cat,x)], xrange(0,3) )
+            effparams = options.parametric_signal_acceptance["%s_avg_reco_eff_%s" % (selection,cat) ]
+            acc_coeffs = ROOT.RooArgList()
+
+            for ip,params in enumerate(accparams):
+                coeff_coeffs = ROOT.RooArgList()
+                map( lambda x: coeff_coeffs.add( RooFit.RooConst(x) ), params )
+                poly = ROOT.RooPolyVar("acc_%s_%d" %(cat,ip), "acc_%s_%d" %(cat,ip), kmpl, coeff_coeffs,0)
+                self.keep(poly)
+                acc_coeffs.add(poly)
+                
+            self.keep( coeff_coeffs )
+            acceptance = ROOT.RooPolyVar("acc_%s" %cat, "acc_%s" %cat, MH, acc_coeffs,0)
+            eff_coeffs = ROOT.RooArgList()
+            map( lambda x: eff_coeffs.add( RooFit.RooConst(x) ), effparams )
+            efficiency = ROOT.RooPolyVar("eff_%s" %cat, "eff_%s" %cat, MH, eff_coeffs,0)
+            exA = ROOT.RooProduct( "eff_acc_%s" % cat, "eff_acc_%s" % cat, ROOT.RooArgList(efficiency,acceptance) )
+            exAs[cat] = exA
+            self.keep( [eff_coeffs, acceptance, efficiency] )
+            
+        ### reparam = options.parametric_signal_source_new.get("reparam_by_cat",{}).get(cat,options.parametric_signal_source_new.get("reparam",{})) 
+        ### print reparam
+        ### reparamVars = {}
+        ### one = RooFit.RooConst(1.)
+        ### minus_one = RooFit.RooConst(-1.)
+        ### zero = RooFit.RooConst(-1.)
+        ### minusMH = ROOT.RooLinearVar("minusMH","minusMH",MH,minus_one,zero)
+        ### for key,val in reparam.iteritems():
+        ###     dst = self.getVar(val)
+        ###     dst = self.buildRooVar(*dst,importToWs=True,recycle=True,setConstant=True)
+        ###     reparamVars[key] = dst
+        ### print reparamVars
+        options.signals = {}
+      
+
+        masses = options.parametric_signal_source_new.get("masses",[None])
+        if len(masses) == 3:
+            masses = xrange(masses[1],masses[2],masses[0])
+        if len(options.parametric_signal_range) == 2:
+            masses = filter(lambda x: x>=options.parametric_signal_range[0] and x<options.parametric_signal_range[1], masses)
+        if options.rescale_signal_ratio:
+            xsec_ratio = ROOT.RooFormulaVar("xsec_ratio",options.rescale_signal_ratio.replace("x","@0"),ROOT.RooArgList(MH))
+        else:
+            xsec_ratio = RooFit.RooConst(1.)
+        
+
+        print "---------------------------STARTING WITh PDF---------------------------------------"
+        for coup,pdfs in options.parametric_signal_source_new["pdfs"].iteritems():
+
+            if len(options.only_coups) > 0 and not coup in options.only_coups: continue
+            self.bookNewWs()
+
+            for cat,name in pdfs.iteritems():
+                if not cat in categories: continue
+                sublist_fwhm = {}
+                signame = options.parametric_signal_prefix
+                print "----------------------SIG NAME: ",signame
+                if coup != "": signame += "_%s" % coup
+  
+                kmpl.setVal(self.getCoupFromNameNew(signame))
+                print "--------------------KMPL: ",kmpl
+                options.signals[signame] = signame
+                if not signame in fit["sig_params"]:
+                    fit["sig_params"][signame] = []
+                if not signame in fit["sig_params"]:
+                    fit["sig_params"][signame] = {}
+                print "-------------------------import pdf -----------------------------------------"
+      
+            print "---------------------------STARTING WITh PDF---------------------------------------"
+            for cat,name in pdfs.iteritems():  
+                if not cat in categories: continue
+
+                print "-------------------------CAt and NAME: ",cat,name
+                
+                reparam = options.parametric_signal_source_new.get("reparam_by_cat",{}).get(cat,options.parametric_signal_source_new.get("reparam",{})) 
+                reparamVars = {}
+                for key,val in reparam.iteritems():
+                    dst = self.getVar(val)
+                    dst = self.buildRooVar(*dst,importToWs=True,recycle=True,setConstant=True)
+                    reparamVars[key] = dst
+                print reparamVars
+                
+                pdf = workspace.pdf(name)# % ("")
+                obsIn = workspace.var(options.parametric_signal_source_new.get("obs","mgg"))
+                
+                custom = ROOT.RooCustomizer(pdf,"")
+                obsCat = self.getObservable(cat)
+                custom.replaceArg(obsIn,obsCat)
+                for src,dst in reparamVars.iteritems():
+                    srcVar = workspace.var(src)
+                    dst.setVal(srcVar.getVal())
+                    custom.replaceArg(srcVar,dst)
+                pdf = custom.build(True)                
+                
+                print "----------------------------------saving fhwm parametrization -----------------------------------------"
+                
+                if options.store_fwhm_parametrization:
+                    ## workspace.Print()
+                    fhwm_formula = workspace.arg("FHWM_%s" %cat)
+                    p0 = workspace.arg("p0_"+cat).getVal()
+                    p1 = workspace.arg("p1_"+cat).getVal()
+                    fhwm_tf1_formula = "%f + %f*@0" % (p0,p1)
+                    print fhwm_tf1_formula
+                    options.fhwm_parametrized_formula = fhwm_tf1_formula
+                    print options.fhwm_parametrized_formula
+                            
+                print "----------------------------------energy scale -----------------------------------------"
+                    #the following is to store the thetaScale uncertainty
+                if options.do_energy_scale_uncertainty:
+                                               
+                        #this is the uncertainty used on the scale
+                        unc = options.energy_scale_uncertainties.get(cat,options.energy_scale_uncertainty)
+                                                
+                        # break-down in terms of covariance matrix eigenvectors
+                        if len(options.energy_scale_eigenvec) > 0:
+                            variations = {}
+                            for eig,effects in options.energy_scale_eigenvec.iteritems():
+                                print eig,effects
+                                if cat in effects:
+                                    variations[eig] = effects[cat]
+                                   
+                        else:
+                            variations = { cat : 1. }
+
+                         # make one shifted pdf per eigenvector
+                        unc = options.energy_scale_uncertainties.get(cat,options.energy_scale_uncertainty)
+                        
+                        rooList = ROOT.RooArgList(workspace.arg("mean_%s" %cat))
+                        formula = "@0*(1."
+                        for nam,val in variations.iteritems():
+                            if val == 0: continue
+                            nuisName = "thetaScale%s" % nam
+                            print nam,val
+                            thetaScale = self.buildRooVar(nuisName,[0.,-4.,4.],recycle=True,setConstant=True)
+                            deltaScale = self.buildRooVar("deltaScale_%s_%s" %(cat,nam),[val*unc],recycle=True,setConstant=True)
+                            ispot = rooList.getSize()
+                            rooList.add(thetaScale)
+                            rooList.add(deltaScale)
+                            formula += "+@%d*@%d" % ( ispot, ispot+1 )
+                            if not nuisName in fit["sig_params"][signame]:
+                                fit["sig_params"][signame].append((nuisName,0,1))
+                        formula += ")"
+                        
+                        #include the systematic shift due to ecal scale          
+                        scaledMean = ROOT.RooFormulaVar("scaled_mean_%s" % (cat),"scaled_mean_%s" % (cat),formula,rooList)
+                        
+                        custom = ROOT.RooCustomizer(pdf,"")
+                        custom.replaceArg(workspace.arg("mean_%s" %cat),scaledMean)
+                        pdf = custom.build(True)
+
+                pdf.SetName("model_signal_%s_%s" % (signame,cat))
+                ## FIXME
+                xsection = 1. * float(options.luminosity)
+                norm = ROOT.RooProduct("model_signal_%s_%s_norm" % (signame,cat), "model_signal_%s_%s_norm" % (signame,cat), 
+                                       ROOT.RooArgList(RooFit.RooConst(xsection),exAs[cat],xsec_ratio) )
+                sublist_fwhm["%s_norm" % cat] = norm.getVal()
+                
+                self.workspace_.rooImport(pdf,ROOT.RooFit.RecycleConflictNodes())
+                self.workspace_.rooImport(norm,ROOT.RooFit.RecycleConflictNodes())
+                if self.options.verbose:
+                    self.workspace_.Print()                        
+             
+                print "------------------------save smearing unc in datacard ----------------------------"
+                if options.do_parametric_signal_nuisances:
+                    for nuisName,cats in options.parametric_signal_nuisances_new.iteritems():
+                        if not cat in cats: continue
+                        fit["sig_params"][signame].append((nuisName,0,1))
+                        
+
+               
+                options.output_file = "%s_%s.root" % (prefix_output,signame)
+                
+        
+               
+            self.saveWs(options)
+
+    ## ------------------------------------------------------------------------------------------------------------
+    ## ------------------------------------------------------------------------------------------------------------
     def generateParametricSignal(self,options,args):
         
         from templates_maker import WsList
-        tmp = self.open("/tmp/musella/cache.root","recreate")
+        tmp = self.open("/tmp/%s/cache.root" % getuser(),"recreate")
         ws = ROOT.RooWorkspace("w","w")
         workspace = WsList(ws)
         exp = map(lambda x: glob.glob("%s/*.root" % x) if x.endswith("/") else [x], options.parametric_signal)
@@ -2401,6 +2838,18 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
         return float("0."+self.getCoupAndMassFromName(name)[0][1:])
 
     ## ------------------------------------------------------------------------------------------------------------
+    def getCoupAndMassFromNameNew(self,name):
+        print name
+        coup = name.replace("grav_","").split("_")[0:1]
+        print coup
+        return coup
+
+    ## ------------------------------------------------------------------------------------------------------------
+    def getCoupFromNameNew(self,name):
+        print name
+        return float("0."+self.getCoupAndMassFromNameNew(name)[0][1:])
+
+    ## ------------------------------------------------------------------------------------------------------------
     def getMassFromName(self,name):
         return float(self.getCoupAndMassFromName(name)[1])
 
@@ -2419,7 +2868,8 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
         ROOT.TH1D.SetDefaultSumw2(True)
         obsname = obs.GetName()
         if obsname.startswith("mass") or obsname.startswith("mgg"):
-            obs.SetTitle("m_{#gamma #gamma}")
+            ## obs.SetTitle("m_{#gamma#gamma}")
+            obs.SetTitle("#it{m}_{#gamma#gamma}")
             obs.setUnit("GeV")
         elif "templateNdim" in obsname:
             subname = obsname.replace("templateNdim","")
@@ -2480,8 +2930,28 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
             ###         frame = obs.frame(228.35,1608.35)
             ###         resid = obs.frame(228.35,1608.35)
             ### else:
-            frame = obs.frame(230,1610)
-            resid = obs.frame(230,1610)
+            ##frame = obs.frame(230,1610)
+            ##resid = obs.frame(230,1610)
+            if signalmodel:
+                frame = obs.frame(560,930)
+                resid = obs.frame(560,930)
+                rngmin = 610
+                rngmax = 930
+                ### frame = obs.frame(610,930)
+                ### resid = obs.frame(610,930)
+                ### rngmin = 610
+                ### rngmax = 930
+                ### frame = obs.frame(510,1030)
+                ### resid = obs.frame(510,1030)
+                ### rngmin = 510
+                ### rngmax = 1030
+                ### frame = obs.frame(410,1130)
+                ### resid = obs.frame(410,1130)
+                ### rngmin = 410
+                ### rngmax = 1130
+            else:
+                frame = obs.frame(230,2010)
+                resid = obs.frame(230,2010)
             ## frame = fmobs.frame(RooFit.Range("plotBinning"))
             ## resid  = fmobs.frame(RooFit.Range("plotBinning"))
             curveopts.append(RooFit.Range("plotBinning"))
@@ -2511,20 +2981,28 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
         if not doBands:
              plotDset.plotOn(frame,*(dataopts+invisible))
         print "Plotting pdf....",
+
         pdf.plotOn(frame,*(curveopts+invisible))
-        print "done"        
-        ## pdf.Print()
-        ## dset.Print()
         fitc   = frame.getObject(int(frame.numItems()-1))
         hist   = frame.getObject(int(frame.numItems()-2))
+
+        if signalmodel:
+            totNev = signalmodel_norm[0]+signalmodel_norm[1]
+            sigFrac = signalmodel_norm[1]/totNev
+            addpdf = ROOT.RooAddPdf("pr_pdf_sum", "pr_pdf_sum", signalmodel, pdf, RooFit.RooConst(sigFrac) )
+            stylopts=[RooFit.LineColor(ROOT.kRed+1),RooFit.FillColor(ROOT.kRed),RooFit.FillStyle(1001)]
+            sigopts=[RooFit.Normalization(totNev,ROOT.RooAbsReal.NumEvent)]+stylopts
+            addpdf.plotOn(frame,*(curveopts+sigopts))
+            ## signalmodel.plotOn(frame,*(curveopts+stylopts+[RooFit.Normalization(signalmodel_norm[1],ROOT.RooAbsReal.NumEvent)]))
+            signalmodel = frame.getObject(int(frame.numItems()-1))
+        print "done"        
+
+
         if poissonErrs:
             alpha = (1. - 0.6827)*0.5
             for ip in range(hist.GetN()):
                 if blind and hist.GetX()[ip]-hist.GetErrorXlow(ip)>=blind[0] and hist.GetX()[ip]+hist.GetErrorXhigh(ip)<=blind[1]:
                     hist.SetPoint(ip,hist.GetX()[ip],0.)
-                    ## hist.SetPointEYlow(ip,0.)
-                    ## hist.SetPointEYhigh(ip,0.)
-                    ## continue
                     nev = fitc.Eval(hist.GetX()[ip])
                     ## el = 0.
                     ## eu = 0.
@@ -2536,16 +3014,25 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                 hist.SetPointEYhigh(ip,eu)
 
         fitcLeg,histLeg = fitc,hist
-        ## print hist, fitc
         if extra:
             extra.plotOn(frame,RooFit.LineColor(ROOT.kGreen))
             
         if doBands:
             print "Making fit error bands...",
-            onesigma,twosigma = self.plotFitBands(options,frame,dset,pdf,obs,fitc,binning,blabel,bias_funcs)
-            pdf.plotOn(frame,*curveopts)
+            if options.read_fit_bands:
+                cat = label.split("_")[1]
+                fin = ROOT.TFile.Open(options.read_fit_bands%cat)
+                onesigma = fin.Get("onesigma").Clone()
+                twosigma = fin.Get("twosigma").Clone()
+                fin.Close()
+                frame.addObject(twosigma,"E2")
+                frame.addObject(onesigma,"E2")
+            else:
+                onesigma,twosigma = self.plotFitBands(options,frame,dset,pdf,obs,fitc,binning,blabel,bias_funcs)
+            if signalmodel:
+                addpdf.plotOn(frame,*(curveopts+sigopts))
+            pdf.plotOn(frame,*(curveopts))
             plotDset.plotOn(frame,*(dataopts))
-            ## dset.plotOn(frame,*(dataopts))
             
             hist2   = frame.getObject(int(frame.numItems()-1))
             if poissonErrs:
@@ -2553,16 +3040,11 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                 for ip in range(hist2.GetN()):
                     if blind and hist2.GetX()[ip]-hist2.GetErrorXlow(ip)>blind[0] and hist2.GetX()[ip]+hist2.GetErrorXhigh(ip)<blind[1]:
                         hist2.SetPoint(ip,hist2.GetX()[ip],0.)
-                        ## hist2.SetPointEYlow(ip,0.)
-                        ## hist2.SetPointEYhigh(ip,0.)
-                        ## nev = fitc.Eval(hist2.GetX()[ip])
-                        ## continue
-                        el = 0. 
-                        eu = 0.
+                        nev = fitc.Eval(hist2.GetX()[ip])
                     else:
                         nev = hist2.GetY()[ip]
-                        el = (nev - ROOT.Math.gamma_quantile(alpha,nev,1.)) if nev > 0. else 0.
-                        eu = ROOT.Math.gamma_quantile_c(alpha,nev+1.,1.) - nev
+                    el = (nev - ROOT.Math.gamma_quantile(alpha,nev,1.)) if nev > 0. else 0.
+                    eu = ROOT.Math.gamma_quantile_c(alpha,nev+1.,1.) - nev
                     hist2.SetPointEYlow(ip,el)
                     hist2.SetPointEYhigh(ip,eu)
                     
@@ -2582,12 +3064,12 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                 
                 oerrp, oerrm = ronesigma.GetErrorYhigh(ip), ronesigma.GetErrorYlow(ip)
                 terrp, terrm = rtwosigma.GetErrorYhigh(ip), rtwosigma.GetErrorYlow(ip)
-                herrp, herrm = hist.GetErrorYhigh(ip), hist.GetErrorYhigh(ip)
-                ## print oerrp, oerrm, herrp, herrm
+                herrp, herrm = hist.GetErrorYhigh(ip), hist.GetErrorYlow(ip)
+                
                 if blind and ronesigma.GetX()[ip]-ronesigma.GetErrorXlow(ip)>blind[0] and ronesigma.GetX()[ip]+ronesigma.GetErrorXhigh(ip)<blind[1]:
                     ronesigma.SetPoint(ip,ronesigma.GetX()[ip],0.)
                     rtwosigma.SetPoint(ip,rtwosigma.GetX()[ip],0.)
-                if py > hy:
+                if py < hy:
                     if herrm == 0.: continue
                     oerrp /= herrm
                     terrp /= herrm
@@ -2599,7 +3081,7 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                     terrp /= herrp
                     oerrm /= herrp
                     terrm /= herrp
-                ## print oerrp, oerrm, herrp, herrm
+
                 ronesigma.SetPointEYhigh(ip,oerrp),ronesigma.SetPointEYlow(ip,oerrm)
                 rtwosigma.SetPointEYhigh(ip,terrp),rtwosigma.SetPointEYlow(ip,terrm)
                 
@@ -2617,13 +3099,50 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                 pass
             
             print "done"
-        # one = ROOT.TLine(resid.GetXaxis().GetXmin(),0,resid.GetXaxis().GetXmax(),0)
+            
+            if signalmodel:
+                integral = 0.
+                for ip in xrange(signalmodel.GetN()):
+                    ix   = signalmodel.GetX()[ip]
+                    nspb = signalmodel.Eval(ix)
+                    nb   = fitc.Eval(ix)
+                    integral += (nspb - nb)
+                binw = signalmodel_norm[1] / integral
+                print binw
+                naive = 0.
+                sigresid = signalmodel.Clone()
+                ## sigresid.Print("V")
+                jp = 0
+                rescale = 0.
+                sumsq = 0.
+                for ip in xrange(sigresid.GetN()):
+                    ix   = sigresid.GetX()[ip]
+                    if ix>700 and ix<800:
+                        ns   = (sigresid.Eval(ix)-fitc.Eval(ix))*binw
+                        nb   = fitc.Eval(ix)*20.
+                        alpha = (1. - 0.6827)*0.5
+                        eb = ROOT.Math.gamma_quantile_c(alpha,nb+1.,1.) - nb
+                        ## iy = ns/eb
+                        rescale += ns/(eb*eb)
+                        sumsq += ns
+                    else:
+                        iy = 0.
+                rescale = sqrt(rescale/sumsq)*20.
+                print "rescale", rescale, sqrt(sumsq)
+                for ip in xrange(sigresid.GetN()):
+                    ix   = sigresid.GetX()[ip]
+                    iy   = (sigresid.Eval(ix)-fitc.Eval(ix))*rescale*binw
+                    sigresid.SetPoint(ip,ix,iy*sqrt(20.)*0.9)
+                    naive += ((iy)**2)
+                ## sigresid.Print("V")
+                print "naive : ", sqrt(naive), "integral", integral, signalmodel_norm[1]
+                resid.addObject(sigresid,"L")
+            
         one = ROOT.TLine(rngmin,0,rngmax,0)
-        ## one.Print()
         one.SetLineColor(ROOT.kBlue), one.SetLineWidth(2)
         resid.addObject(one)
         self.keep(one)
-        hresid = frame.residHist(hist.GetName(),fitc.GetName(),True)
+        hresid = frame.residHist(hist.GetName(),fitc.GetName(),True)                
         npoints = hresid.GetN()
         for ip in range(npoints,0,-1):
             if blind and hresid.GetX()[ip]-hresid.GetErrorXlow(ip)>blind[0] and hresid.GetX()[ip]+hresid.GetErrorXhigh(ip)<blind[1]:
@@ -2632,81 +3151,59 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
         
         resid.addPlotable(hresid,"PE")
         
-        if signalmodel:
-            signalmodel.plotOn(frame,RooFit.Normalization(signalmodel_norm.getVal(),ROOT.RooAbsReal.NumEvent),RooFit.LineColor(ROOT.kRed+1))
-            signalmodel = frame.getObject(int(frame.numItems()-1))
-            
         if sig: 
             canv = ROOT.TCanvas("sig_fit_%s" % label, "sig_fit_%s" % label)
             legend = None
         else:
-            ## canv = ROOT.TCanvas("bkg_fit_%s" % label, "bkg_fit_%s" % label,1400,1000)
             canv = ROOT.TCanvas("bkg_fit_%s" % label, "bkg_fit_%s" % label,550,600)
             if logy:
-                ## legend = ROOT.TLegend(0.15,0.1,0.65,0.5)
-                ## legend = ROOT.TLegend(0.15,0.14,0.4,0.54)
-                legend = ROOT.TLegend(0.6,0.6,1,0.95)
-                ## legend = ROOT.TLegend(0.15,0.1,0.65,0.75)
-                ## legend = ROOT.TLegend(0.15,0.1,0.8,0.5)
+                if signalmodel:
+                    legend = ROOT.TLegend(0.55,0.55,0.95,0.95)
+                    logy = False
+                else:
+                    ## legend = ROOT.TLegend(0.6,0.6,1,0.95)
+                    legend = ROOT.TLegend(0.55,0.65,0.95,0.95)
             else:
-                legend = ROOT.TLegend(0.6,0.55,1.1,0.9)
-                ## legend = ROOT.TLegend(0.4,0.5,0.9,0.9)
-                ## legend = ROOT.TLegend(0.4,0.35,0.9,0.9)
-
-        ## dset.plotOn(frame,*(dataopts+invisible+[RooFit.Invisible(),RooFit.RefreshNorm()]))
-                
-        ## canv.SetLeftMargin(0.2)
+                    legend = ROOT.TLegend(0.6,0.55,1.1,0.9)
+        legend.SetTextSize(0.075)
+        
         canv.Divide(1,2)
                 
-        ## canv.SetLeftMargin(0.12),canv.SetRightMargin(0.025),canv.SetTopMargin(0.085),canv.SetBottomMargin(0.12)
         canv.cd(1)
         ROOT.gPad.SetPad(0.,0.38,1.,0.95)
-        ## ROOT.gPad.SetLeftMargin(0.12),ROOT.gPad.SetRightMargin(0.025),
         ROOT.gPad.SetTopMargin(0.0015),ROOT.gPad.SetBottomMargin(0.02)
         ROOT.gPad.SetLogy(logy)
-        ## ROOT.gPad.SetLogx(logx)
         ROOT.gPad.SetFillStyle(0)
         ROOT.gPad.SetTickx()
-        # ROOT.gPad.SetTicky()
         
         canv.cd(2)        
         ROOT.gPad.SetPad(0.,0.,1.,0.38)
         ROOT.gPad.SetFillStyle(0)
-        ## ROOT.gPad.SetLeftMargin(0.12),ROOT.gPad.SetRightMargin(0.025),
         ROOT.gPad.SetTopMargin(0.0015),ROOT.gPad.SetBottomMargin(0.32)
         ROOT.gPad.SetFillStyle(0)
         ROOT.gPad.SetTickx()
-        # ROOT.gPad.SetTicky()
 
         canv.cd(1)
         if sig:
             ymin = fitc.GetMinimum()
             ymax = fitc.GetMaximum()
         else:
-            ## ymax = fitc.interpolate(frame.GetXaxis().GetXmin())*3.
             ymax = fitc.interpolate(frame.GetXaxis().GetXmin())*2.
             ymin = fitc.interpolate(frame.GetXaxis().GetXmax())*0.3
-            ## ymax = fitc.GetMaximum()*3.
-            ## ymin = fitc.GetMinimum()*0.3
         if not logy:
-            ymax = ymax * 0.5
+            ## ymax = ymax * 0.5
             ymin = min(-0.02*ymax,ymin)
         else:
-            ## ymin = max(1.1e-2,ymin)
             ymin = max(1.1e-1,ymin)
         
-        ### frame.GetXaxis().SetLimits(200,20000)
-        ### frame.GetXaxis().SetRangeUser(200,2000)
-        ### resid.GetXaxis().SetLimits(200,2000)
-        ### resid.GetXaxis().SetRangeUser(200,2000)
+            
+        frame.GetYaxis().SetTitle(frame.GetYaxis().GetTitle().replace("(","").replace(")","").replace(" ","").replace("/"," / ").replace("GeV"," GeV"))
+        frame.GetYaxis().SetTitleSize(0.09)
         frame.GetXaxis().SetLabelSize( 1.2*frame.GetXaxis().GetLabelSize() )
         frame.GetXaxis().SetTitleSize( 1.2*frame.GetXaxis().GetTitleSize() )
         frame.GetXaxis().SetTitleOffset( 1.15 )
         frame.GetYaxis().SetRangeUser(ymin,ymax)
         frame.GetXaxis().SetMoreLogLabels()
-        ## frame.GetYaxis().SetLabelSize( frame.GetXaxis().GetLabelSize() * canv.GetWh() / ROOT.gPad.GetWh() * 1.1 )
-        ## frame.GetYaxis().SetTitleSize( frame.GetXaxis().GetTitleSize() * canv.GetWh() / ROOT.gPad.GetWh() * 1.1 )
-        ## frame.GetYaxis().SetTitleOffset( 0.6 )
         frame.GetYaxis().SetLabelSize( frame.GetXaxis().GetLabelSize() * canv.GetWh() / ROOT.gPad.GetWh() * 1.3 )
         frame.GetYaxis().SetTitleSize( frame.GetXaxis().GetTitleSize() * canv.GetWh() / ROOT.gPad.GetWh() * 1.3 )
         frame.GetYaxis().SetTitleOffset( 0.75 )
@@ -2717,27 +3214,27 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
             legend.SetFillColor(ROOT.kWhite)
             legend.SetFillStyle(0)
             legend.SetShadowColor(ROOT.kWhite)
-            ## legend.AddEntry(None,"%s category" % label.split("_")[-1],"")
             legend.AddEntry(hist,"Data","pe")
             legend.AddEntry(fitc,"Fit model","l")
             if doBands:
-                legend.AddEntry(onesigma,"#pm 1 #sigma","f")
-                legend.AddEntry(twosigma,"#pm 2 #sigma","f")
+                legend.AddEntry(onesigma,"#pm 1 s.d.","f")
+                legend.AddEntry(twosigma,"#pm 2 s.d.","f")
             if signalmodel:
-                legend.AddEntry(signalmodel,"#scale[0.9]{G(#scale[0.7]{#tilde{#kappa}=0.01})#rightarrow#gamma#gamma #times 2#upoint10^{-2}}","l")
-                ## legend.AddEntry(None,"   (#tilde{#kappa}=0.01)","")
+                 ## legend.AddEntry(signalmodel,"#scale[0.9]{G(#scale[0.7]{#tilde{#kappa}=0.01})#rightarrow#gamma#gamma #times 2#upoint10^{-2}}","l")
+                legend.AddEntry(signalmodel,"#scale[0.9]{J=0 #sigma = 3.6fb}","l")
                  
                 
             legend.Draw("same")
             self.keep(legend)
-        ## pt=ROOT.TPaveText(0.78,0.85,0.95,0.995,"nbNDC")
-        ## pt=ROOT.TPaveText(0.24,0.82,0.5,0.97,"nbNDC")
-        pt=ROOT.TPaveText(0.35,0.88,0.46,0.97,"nbNDC")
+        ## pt=ROOT.TPaveText(0.35,0.88,0.46,0.97,"nbNDC")
+        pt=ROOT.TPaveText(0.35,0.8,0.46,0.89,"nbNDC")
+        ## pt=ROOT.TPaveText(0.25,0.8,0.4,0.89,"nbNDC")
         
         pt.SetFillStyle(0)
         pt.SetLineColor(ROOT.kWhite)
-        ## pt.AddText("%s category" % label.split("_")[1])
-        pt.AddText("%s" % label.split("_")[1].replace("0T",""))
+        pt.SetTextFont(42)
+        pt.SetTextSize(0.072)
+        pt.AddText("%s" % label.split("_")[1].replace("0T","").replace("016",""))
         pt.Draw("same")
         self.keep(pt)
         
@@ -2750,29 +3247,21 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
 
         canv.cd(2)
         ROOT.gPad.SetGridy()
-        ## ROOT.gPad.SetLogx(logx)
         resid.GetXaxis().SetMoreLogLabels()
-        ## resid.GetXaxis().SetNdivisions(515)
         resid.GetXaxis().SetNdivisions(510)
         resid.GetYaxis().SetNdivisions(505)
         resid.GetYaxis().CenterTitle()
-        ### resid.GetYaxis().SetTitleSize( frame.GetYaxis().GetTitleSize() * 6.5/3.5 )
-        ### resid.GetYaxis().SetTitleOffset( frame.GetYaxis().GetTitleOffset() * 3.5/6.5 ) # not clear why the ratio should be upside down, but it does
-        ### resid.GetYaxis().SetLabelSize( frame.GetYaxis().GetLabelSize() * 6.5/3.5 )
-        ### resid.GetXaxis().SetTitleSize( frame.GetXaxis().GetTitleSize() * 6.5/3.5 )
-        ### resid.GetXaxis().SetTitleOffset( frame.GetXaxis().GetTitleOffset() )
-        ### resid.GetXaxis().SetLabelSize( frame.GetXaxis().GetLabelSize() * 6.5/3.5 )
         resid.GetYaxis().SetTitleSize( frame.GetYaxis().GetTitleSize() * 1.4 )
         resid.GetYaxis().SetTitleOffset( frame.GetYaxis().GetTitleOffset() * 0.6 ) # not clear why the ratio should be upside down, but it does
         resid.GetYaxis().SetLabelSize( frame.GetYaxis().GetLabelSize() * 1.3 )
-        resid.GetXaxis().SetTitleSize( frame.GetXaxis().GetTitleSize() * 2. )
+        resid.GetXaxis().SetTitleSize( frame.GetXaxis().GetTitleSize() * 2. * 1.3/1.2 )
         resid.GetXaxis().SetTitleOffset( frame.GetXaxis().GetTitleOffset() )
         resid.GetXaxis().SetLabelSize( frame.GetXaxis().GetLabelSize() * 6.5/3.5 )
-        ## resid.GetYaxis().SetTitle("(data - model) / #sigma_{data}")
-        ## resid.GetYaxis().SetTitle("(data-fit)/#sigma_{data}")
         resid.GetYaxis().SetTitle("(data-fit)/#sigma_{stat}")
-        ## resid.GetYaxis().SetRangeUser( -5., 5. )
-        resid.GetYaxis().SetRangeUser( -3, 3 )
+        if signalmodel:
+            resid.GetYaxis().SetRangeUser( -3, 5 )
+        else:
+            resid.GetYaxis().SetRangeUser( -3, 3 )
         resid.Draw()
 
         canv.cd(1)
@@ -2787,8 +3276,17 @@ kmax * number of nuisance parameters (source of systematic uncertainties)
                 
         frame.GetXaxis().SetTitle("")
         frame.GetXaxis().SetLabelSize(0.)
+        
+        if ROOT.cmsText == "":
+            canv.cd()
+            ptCMS=ROOT.TLatex(0.2,0.44175,"CMS")
+            ptCMS.SetTextFont(61)
+            ptCMS.SetTextSize(0.051)
+            ptCMS.Draw("same")
+            self.keep(ptCMS)
                 
         print 
+
         # this will actually save the plots
         self.keep(canv)
         self.format(canv,self.options.postproc)
